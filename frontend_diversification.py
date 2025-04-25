@@ -99,13 +99,7 @@ def diversification_tab():
     )
 
     # Predefined large ticker set
-    tickers = sorted([
-        "AAPL", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "BRK-B", "JNJ", "V", "WMT",
-        "JPM", "PG", "UNH", "HD", "DIS", "NVDA", "VZ", "ADBE", "NFLX", "INTC",
-        "PEP", "KO", "PFE", "MRK", "CVX", "XOM", "T", "BA", "IBM", "CRM",
-        "NKE", "QCOM", "ORCL", "ABBV", "TMO", "ABT", "MDT", "LLY", "BMY", "COST",
-        "MCD", "HON", "UPS", "LOW", "GS", "AXP", "GE", "CAT", "DE", "BLK"
-    ])
+    tickers = pd.read_csv("all_tickers.csv")["ticker"].values
 
     portfolio_df = None
     selected_tickers = []

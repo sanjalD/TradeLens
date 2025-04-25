@@ -27,3 +27,5 @@ backtesting_test.ipynb
 
 .DS_Store
 .idea/
+
+__pycache__
