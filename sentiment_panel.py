@@ -3,6 +3,9 @@ import pandas as pd
 import plotly.express as px
 from transformers import BertTokenizer, BertForSequenceClassification, pipeline
 from gnews import GNews
+from newspaper import Article
+import requests
+
 
 @st.cache_resource
 def load_finbert():
@@ -10,9 +13,25 @@ def load_finbert():
     model = BertForSequenceClassification.from_pretrained("yiyanghkust/finbert-tone")
     return pipeline("sentiment-analysis", model=model, tokenizer=tokenizer)
 
+def resolve_real_url(google_news_link):
+    try:
+        response = requests.get(google_news_link, allow_redirects=True, timeout=100)
+        print(f"new url : {response.url}")
+        return response.url
+    except Exception as e:
+        print("Failed to resolve:", e)
+        return None
+
 def get_news(ticker):
     google_news = GNews(language='en', max_results=10)
-    return google_news.get_news(f"{ticker} stock")
+    raw_news = google_news.get_news(f"{ticker} stock")
+
+    for item in raw_news:
+        gnews_link = item.get('url')
+        real_url = resolve_real_url(gnews_link)
+        item['real_url'] = real_url
+
+    return raw_news
 
 def sentiment_analysis_panel():
     st.header("🧾 Company News + Sentiment Analysis")
@@ -30,13 +49,23 @@ def sentiment_analysis_panel():
 
                 for item in news_items:
                     title = item.get("title")
-                    link = item.get("url", "N/A")
+                    content = item.get("content")
+                    link = item.get("real_url", "N/A")
+
+                    article = Article(link)
+                    article.download()
+                    article.parse()
+
+                    content = article.text
+
+                    content = f"{title} {content}"  if content is not None and content != "" else title
 
                     if not title:
                         continue  # skip if no title
 
                     try:
-                        sentiment = finbert(title)[0]
+                        # sentiment = finbert(title)[0]
+                        sentiment = finbert(content)[0]
                         results.append({
                             "Title": f"[{title}]({link})",
                             "Sentiment": sentiment["label"],
